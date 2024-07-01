@@ -10,6 +10,17 @@ app.use(morgan('tiny'))
 const UDF = require('./udf')
 const udf = new UDF()
 
+const http = require('http');
+const socketIo = require('socket.io');
+const { initSocket } = require('./sockets/socketManager');
+const { tickerRouter } = require('./controllers/tickerController');
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 // Common
 
 const query = require('./query')
@@ -75,6 +86,9 @@ app.get('/history', [
     ))
 })
 
+
+app.use('/api', tickerRouter);
+initSocket(io);
 // Handle errors
 
 app.use((err, req, res, next) => {
@@ -108,6 +122,6 @@ app.use((err, req, res, next) => {
 // Listen
 
 const port = process.env.PORT || 8080
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Listening on port ${port}`)
 })
